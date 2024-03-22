@@ -418,7 +418,8 @@ class ParticlePainter extends CustomPainter {
         particle.image,
         Rect.fromLTWH(0, 0, confettiImage.width.toDouble(),
             confettiImage.height.toDouble()),
-        Rect.fromLTWH(particle.location.dx, particle.location.dy, 15, 15),
+        Rect.fromLTWH(particle.location.dx, particle.location.dy,
+            particle.size.width, particle.size.height),
         Paint(),
       );
     }

@@ -215,7 +215,7 @@ class Particle {
   Particle(
       vmath.Vector2 startUpForce,
       Color color,
-      Size size,
+      this.size,
       double gravity,
       double particleDrag,
       Path Function(Size size)? createParticlePath,
@@ -253,6 +253,7 @@ class Particle {
   final double? _gravity;
   final _aAcceleration = 0.0001;
   final ui.Image _image;
+  final Size size;
 
   final Color _color;
   final double _mass;
