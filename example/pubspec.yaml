@@ -11,7 +11,7 @@ environment:
 dependencies:
   confetti:
     path: ../
-  cupertino_icons: ^0.1.2
+  http: ^1.2.1
   flutter:
     sdk: flutter
 

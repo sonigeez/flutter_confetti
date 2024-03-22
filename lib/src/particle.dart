@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math.dart' as vmath;
@@ -24,6 +24,7 @@ class ParticleSystem extends ChangeNotifier {
     required BlastDirectionality blastDirectionality,
     required List<Color>? colors,
     required Size minimumSize,
+    required this.images,
     required Size maximumSize,
     required double particleDrag,
     required double gravity,
@@ -73,6 +74,7 @@ class ParticleSystem extends ChangeNotifier {
   final List<Color>? _colors;
   final Size _minimumSize;
   final Size _maximumSize;
+  final List<ui.Image> images;
   final double _particleDrag;
   final Path Function(Size size)? _createParticlePath;
 
@@ -166,8 +168,14 @@ class ParticleSystem extends ChangeNotifier {
   List<Particle> _generateParticles({int number = 1}) {
     return List<Particle>.generate(
         number,
-        (i) => Particle(_generateParticleForce(), _randomColor(), _randomSize(),
-            _gravity, _particleDrag, _createParticlePath));
+        (i) => Particle(
+            _generateParticleForce(),
+            _randomColor(),
+            _randomSize(),
+            _gravity,
+            _particleDrag,
+            _createParticlePath,
+            images[i % images.length]));
   }
 
   double get _randomBlastDirection =>
@@ -204,8 +212,14 @@ class ParticleSystem extends ChangeNotifier {
 }
 
 class Particle {
-  Particle(vmath.Vector2 startUpForce, Color color, Size size, double gravity,
-      double particleDrag, Path Function(Size size)? createParticlePath)
+  Particle(
+      vmath.Vector2 startUpForce,
+      Color color,
+      Size size,
+      double gravity,
+      double particleDrag,
+      Path Function(Size size)? createParticlePath,
+      this._image)
       : _startUpForce = startUpForce,
         _color = color,
         _mass = Helper.randomize(1, 11),
@@ -221,7 +235,7 @@ class Particle {
         _aVelocityX = Helper.randomize(-0.1, 0.1),
         _aVelocityY = Helper.randomize(-0.1, 0.1),
         _aVelocityZ = Helper.randomize(-0.1, 0.1),
-        _gravity = lerpDouble(0.1, 5, gravity);
+        _gravity = ui.lerpDouble(0.1, 5, gravity);
 
   final vmath.Vector2 _startUpForce;
 
@@ -238,6 +252,7 @@ class Particle {
   double _aVelocityZ;
   final double? _gravity;
   final _aAcceleration = 0.0001;
+  final ui.Image _image;
 
   final Color _color;
   final double _mass;
@@ -317,4 +332,5 @@ class Particle {
   double get angleX => _aX;
   double get angleY => _aY;
   double get angleZ => _aZ;
+  ui.Image get image => _image;
 }

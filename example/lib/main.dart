@@ -1,7 +1,11 @@
+import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
+import 'package:http/http.dart' as http;
 
 void main() => runApp(const ConfettiSample());
 
@@ -25,34 +29,57 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late ConfettiController _controllerCenter;
-  late ConfettiController _controllerCenterRight;
   late ConfettiController _controllerCenterLeft;
-  late ConfettiController _controllerTopCenter;
-  late ConfettiController _controllerBottomCenter;
+  List<ui.Image> images = [];
+  List<String> imageUrls = [
+    'https://storage.googleapis.com/cahoapp/d3273e51-c79a-433b-88cf-72a5017eec0a-1709534449870-ClownEmoji.png',
+    'https://storage.googleapis.com/cahoapp/438050b7-68d4-48d0-8bdf-b1434cf0faec-1709534450997-HeartEmoji.png',
+    'https://storage.googleapis.com/cahoapp/27095fd7-afb2-4fc0-b725-c571a0a4a3bd-1709534451495-NerdEmoji.png',
+    'https://storage.googleapis.com/cahoapp/c694f220-fb59-421d-a50c-1002fc263325-1709534452017-PoopEmoji.png',
+    'https://storage.googleapis.com/cahoapp/2b54d077-1c81-43d1-b2e9-46f7d04d33fe-1709534452522-PopcornEmoji.png',
+  ];
 
   @override
   void initState() {
     super.initState();
-    _controllerCenter =
-        ConfettiController(duration: const Duration(seconds: 10));
-    _controllerCenterRight =
-        ConfettiController(duration: const Duration(seconds: 10));
     _controllerCenterLeft =
-        ConfettiController(duration: const Duration(seconds: 10));
-    _controllerTopCenter =
-        ConfettiController(duration: const Duration(seconds: 10));
-    _controllerBottomCenter =
-        ConfettiController(duration: const Duration(seconds: 10));
+        ConfettiController(duration: const Duration(seconds: 1));
+    _loadAllImages();
+  }
+
+  // void _loadImage() async {
+  //   final image = await NetworkImage();
+  //convert image to ui.Image
+  // }
+
+  // void _loadImage() async {
+  //   final imageUrl =
+  //       'https://storage.googleapis.com/cahoapp/27095fd7-afb2-4fc0-b725-c571a0a4a3bd-1709534451495-NerdEmoji.png';
+  //   final response = await http.get(Uri.parse(imageUrl));
+  //   final bytes = response.bodyBytes;
+  //   final completer = Completer<ui.Image>();
+  //   ui.decodeImageFromList(bytes, completer.complete);
+  //   final image = await completer.future;
+  //   setState(() {
+  //     confettiImage = image;
+  //   });
+  // }
+
+  void _loadAllImages() async {
+    for (var imageUrl in imageUrls) {
+      final response = await http.get(Uri.parse(imageUrl));
+      final bytes = response.bodyBytes;
+      final completer = Completer<ui.Image>();
+      ui.decodeImageFromList(bytes, completer.complete);
+      final image = await completer.future;
+      images.add(image);
+    }
+    setState(() {});
   }
 
   @override
   void dispose() {
-    _controllerCenter.dispose();
-    _controllerCenterRight.dispose();
     _controllerCenterLeft.dispose();
-    _controllerTopCenter.dispose();
-    _controllerBottomCenter.dispose();
     super.dispose();
   }
 
@@ -86,138 +113,35 @@ class _MyAppState extends State<MyApp> {
     return SafeArea(
       child: Stack(
         children: <Widget>[
-          //CENTER -- Blast
-          Align(
-            alignment: Alignment.center,
-            child: ConfettiWidget(
-              confettiController: _controllerCenter,
-              blastDirectionality: BlastDirectionality
-                  .explosive, // don't specify a direction, blast randomly
-              shouldLoop:
-                  true, // start again as soon as the animation is finished
-              colors: const [
-                Colors.green,
-                Colors.blue,
-                Colors.pink,
-                Colors.orange,
-                Colors.purple
-              ], // manually specify the colors to be used
-              createParticlePath: drawStar, // define a custom shape/path.
+          if (images.isNotEmpty)
+            Align(
+              alignment: Alignment.bottomLeft,
+              child: ConfettiWidget(
+                //  confettiImage: Image.network(
+                //   "https://storage.googleapis.com/cahoapp/27095fd7-afb2-4fc0-b725-c571a0a4a3bd-1709534451495-NerdEmoji.png")
+                // ,
+                confettiImages: images!,
+                confettiController: _controllerCenterLeft,
+                blastDirection: -pi / 4, // radial value - RIGHT
+                emissionFrequency: 0.6,
+                blastDirectionality: BlastDirectionality.explosive,
+                gravity: 0.1,
+                numberOfParticles: 10,
+                minBlastForce: 20,
+                maxBlastForce: 40,
+              ),
             ),
-          ),
           Align(
-            alignment: Alignment.center,
-            child: TextButton(
-                onPressed: () {
-                  _controllerCenter.play();
-                },
-                child: _display('blast\nstars')),
-          ),
-
-          //CENTER RIGHT -- Emit left
-          Align(
-            alignment: Alignment.centerRight,
-            child: ConfettiWidget(
-              confettiController: _controllerCenterRight,
-              blastDirection: pi, // radial value - LEFT
-              particleDrag: 0.05, // apply drag to the confetti
-              emissionFrequency: 0.05, // how often it should emit
-              numberOfParticles: 20, // number of particles to emit
-              gravity: 0.05, // gravity - or fall speed
-              shouldLoop: false,
-              colors: const [
-                Colors.green,
-                Colors.blue,
-                Colors.pink
-              ], // manually specify the colors to be used
-              strokeWidth: 1,
-              strokeColor: Colors.white,
+            alignment: Alignment.bottomLeft,
+            child: ElevatedButton(
+              onPressed: () {
+                _controllerCenterLeft.play();
+              },
+              child: const Text('play'),
             ),
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-                onPressed: () {
-                  _controllerCenterRight.play();
-                },
-                child: _display('pump left')),
-          ),
-
-          //CENTER LEFT - Emit right
-          Align(
-            alignment: Alignment.centerLeft,
-            child: ConfettiWidget(
-              confettiController: _controllerCenterLeft,
-              blastDirection: 0, // radial value - RIGHT
-              emissionFrequency: 0.6,
-              minimumSize: const Size(10,
-                  10), // set the minimum potential size for the confetti (width, height)
-              maximumSize: const Size(50,
-                  50), // set the maximum potential size for the confetti (width, height)
-              numberOfParticles: 1,
-              gravity: 0.1,
-            ),
-          ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton(
-                onPressed: () {
-                  _controllerCenterLeft.play();
-                },
-                child: _display('singles')),
-          ),
-
-          //TOP CENTER - shoot down
-          Align(
-            alignment: Alignment.topCenter,
-            child: ConfettiWidget(
-              confettiController: _controllerTopCenter,
-              blastDirection: pi / 2,
-              maxBlastForce: 5, // set a lower max blast force
-              minBlastForce: 2, // set a lower min blast force
-              emissionFrequency: 0.05,
-              numberOfParticles: 50, // a lot of particles at once
-              gravity: 1,
-            ),
-          ),
-          Align(
-            alignment: Alignment.topCenter,
-            child: TextButton(
-                onPressed: () {
-                  _controllerTopCenter.play();
-                },
-                child: _display('goliath')),
-          ),
-          //BOTTOM CENTER
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: ConfettiWidget(
-              confettiController: _controllerBottomCenter,
-              blastDirection: -pi / 2,
-              emissionFrequency: 0.01,
-              numberOfParticles: 20,
-              maxBlastForce: 100,
-              minBlastForce: 80,
-              gravity: 0.3,
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: TextButton(
-                onPressed: () {
-                  _controllerBottomCenter.play();
-                },
-                child: _display('hard and infrequent')),
-          ),
+          )
         ],
       ),
-    );
-  }
-
-  Text _display(String text) {
-    return Text(
-      text,
-      style: const TextStyle(color: Colors.white, fontSize: 20),
     );
   }
 }

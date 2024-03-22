@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:confetti/src/particle.dart';
 import 'package:flutter/material.dart';
+// import 'package:flutter/widgets.dart';
+import 'dart:ui' as ui;
 
 import 'enums/blast_directionality.dart';
 import 'enums/confetti_controller_state.dart';
@@ -10,6 +12,7 @@ class ConfettiWidget extends StatefulWidget {
   const ConfettiWidget({
     Key? key,
     required this.confettiController,
+    required this.confettiImages,
     this.emissionFrequency = 0.02,
     this.numberOfParticles = 10,
     this.maxBlastForce = 20,
@@ -109,6 +112,8 @@ class ConfettiWidget extends StatefulWidget {
   /// Stroke color of the confetti (black by default, requires a strokeWidth > 0)
   final Color strokeColor;
 
+  final List<ui.Image> confettiImages;
+
   /// An optional parameter to set the minimum size potential size for
   /// the confetti.
   ///
@@ -165,6 +170,7 @@ class _ConfettiWidgetState extends State<ConfettiWidget>
         maxBlastForce: widget.maxBlastForce,
         minBlastForce: widget.minBlastForce,
         gravity: widget.gravity,
+        images: widget.confettiImages,
         blastDirection: widget.blastDirection,
         blastDirectionality: widget.blastDirectionality,
         colors: widget.colors,
@@ -295,6 +301,7 @@ class _ConfettiWidgetState extends State<ConfettiWidget>
 
   @override
   Widget build(BuildContext context) {
+    print('building');
     _updatePositionAndSize();
     return RepaintBoundary(
       child: CustomPaint(
@@ -304,6 +311,7 @@ class _ConfettiWidgetState extends State<ConfettiWidget>
           strokeWidth: widget.strokeWidth,
           strokeColor: widget.strokeColor,
           particles: _particleSystem.particles,
+          confettiImage: widget.confettiImages,
           paintEmitterTarget: widget.displayTarget,
         ),
         child: widget.child,
@@ -325,6 +333,7 @@ class ParticlePainter extends CustomPainter {
   ParticlePainter(
     Listenable? repaint, {
     required this.particles,
+    required this.confettiImage,
     bool paintEmitterTarget = true,
     Color emitterTargetColor = Colors.black,
     Color strokeColor = Colors.black,
@@ -350,13 +359,16 @@ class ParticlePainter extends CustomPainter {
   final Paint _particlePaint;
   final Paint _particleStrokePaint;
   final double strokeWidth;
+  final List<ui.Image> confettiImage;
 
   @override
   void paint(Canvas canvas, Size size) {
+    print('painting');
     if (_paintEmitterTarget) {
       _paintEmitter(canvas);
     }
-    _paintParticles(canvas);
+    _paintParticles(
+        canvas, confettiImage[Random().nextInt(confettiImage.length)]);
   }
 
   // TODO: seperate this
@@ -371,7 +383,25 @@ class ParticlePainter extends CustomPainter {
     canvas.drawPath(path, _emitterPaint);
   }
 
-  void _paintParticles(Canvas canvas) {
+  // void _paintParticles(Canvas canvas) {
+  //   for (final particle in particles) {
+  //     final rotationMatrix4 = Matrix4.identity()
+  //       ..translate(particle.location.dx, particle.location.dy)
+  //       ..rotateX(particle.angleX)
+  //       ..rotateY(particle.angleY)
+  //       ..rotateZ(particle.angleZ);
+
+  //     final finalPath = particle.path.transform(rotationMatrix4.storage);
+  //     canvas.drawPath(finalPath, _particlePaint..color = particle.color);
+  //     if (strokeWidth > 0) {
+  //       canvas.drawPath(finalPath, _particleStrokePaint);
+  //     }
+  //   }
+  // }
+  //for image
+  void _paintParticles(Canvas canvas, ui.Image confettiImage) {
+    //pick random image
+
     for (final particle in particles) {
       final rotationMatrix4 = Matrix4.identity()
         ..translate(particle.location.dx, particle.location.dy)
@@ -380,10 +410,17 @@ class ParticlePainter extends CustomPainter {
         ..rotateZ(particle.angleZ);
 
       final finalPath = particle.path.transform(rotationMatrix4.storage);
-      canvas.drawPath(finalPath, _particlePaint..color = particle.color);
+      // canvas.drawPath(finalPath, _particlePaint..color = particle.color);
       if (strokeWidth > 0) {
         canvas.drawPath(finalPath, _particleStrokePaint);
       }
+      canvas.drawImageRect(
+        particle.image,
+        Rect.fromLTWH(0, 0, confettiImage.width.toDouble(),
+            confettiImage.height.toDouble()),
+        Rect.fromLTWH(particle.location.dx, particle.location.dy, 15, 15),
+        Paint(),
+      );
     }
   }
 
